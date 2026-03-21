@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>作業時間＆出来高ツール</title>
+<style>
+body{
+  font-family:sans-serif;
+  background:#f0f0f0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  width:320px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+h2{
+  text-align:center;
+}
+
+label{
+  display:block;
+  margin-top:10px;
+}
+
+input{
+  width:100%;
+  padding:6px;
+  font-size:16px;
+}
+
+button{
+  width:100%;
+  margin-top:8px;
+  padding:10px;
+  font-size:14px;
+  border:none;
+  border-radius:8px;
+  background:#4CAF50;
+  color:white;
+}
+
+.small-btn{
+  margin-top:5px;
+  background:#777;
+}
+
+.result{
+  margin-top:15px;
+  font-size:18px;
+  font-weight:bold;
+  text-align:center;
+}
+
+.history{
+  margin-top:10px;
+  font-size:12px;
+  max-height:120px;
+  overflow:auto;
+  background:#fafafa;
+  padding:5px;
+}
+</style>
+</head>
+
+<body>
+<div class="card">
+<h2>時間＆出来高</h2>
+
+<label>開始</label>
+<input type="time" id="start">
+<button class="small-btn" onclick="setNow('start')">現在時刻</button>
+
+<label>終了</label>
+<input type="time" id="end">
+<button class="small-btn" onclick="setNow('end')">現在時刻</button>
+
+<label>
+<input type="checkbox" id="breakCheck"> 休憩を引く
+</label>
+<input type="number" id="breakTime" placeholder="休憩（分）" disabled>
+
+<button class="small-btn" onclick="setBreak(15)">15分休憩</button>
+
+<label>出来高（個）</label>
+<input type="number" id="count" placeholder="例：540">
+
+<button onclick="calc()">計算</button>
+
+<div class="result" id="result">--</div>
+
+<div class="history" id="history"></div>
+</div>
+
+<script>
+const breakCheck = document.getElementById("breakCheck");
+const breakInput = document.getElementById("breakTime");
+
+breakCheck.addEventListener("change",()=>{
+  breakInput.disabled = !breakCheck.checked;
+});
+
+// 現在時刻
+function setNow(id){
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById(id).value = `${h}:${m}`;
+}
+
+// 休憩ボタン
+function setBreak(min){
+  breakCheck.checked = true;
+  breakInput.disabled = false;
+  breakInput.value = min;
+}
+
+// 分変換
+function toMin(t){
+  const [h,m]=t.split(":").map(Number);
+  return h*60+m;
+}
+
+// 秒フォーマット
+function formatTime(sec){
+  if(sec < 60){
+    return `${Math.round(sec)}秒`;
+  }else{
+    const m = Math.floor(sec/60);
+    const s = Math.round(sec%60);
+    return `${m}分${s}秒`;
+  }
+}
+
+function calc(){
+  const start = document.getElementById("start").value;
+  const end = document.getElementById("end").value;
+  const count = Number(document.getElementById("count").value);
+
+  if(!start || !end){
+    alert("時間を入力してください");
+    return;
+  }
+
+  let diff = toMin(end) - toMin(start);
+  if(diff < 0) diff += 1440;
+
+  if(breakCheck.checked){
+    diff -= Number(breakInput.value) || 0;
+  }
+
+  if(diff < 0) diff = 0;
+
+  const hours = Math.floor(diff/60);
+  const minutes = diff%60;
+
+  let text = `${hours}時間 ${minutes}分`;
+
+  // 出来高計算
+  if(count > 0 && diff > 0){
+    const perHour = Math.round(count / (diff/60));
+    const perItemSec = (diff*60) / count;
+
+    text += `<br>${perHour}個/時`;
+    text += `<br>1個あたり ${formatTime(perItemSec)}`;
+  }
+
+  document.getElementById("result").innerHTML = text;
+
+  saveHistory(text);
+}
+
+// 履歴保存
+function saveHistory(text){
+  let history = JSON.parse(localStorage.getItem("workHistory") || "[]");
+
+  const time = new Date().toLocaleString();
+  history.unshift(`${time} → ${text.replace(/<br>/g," / ")}`);
+
+  history = history.slice(0,10); // 最大10件
+
+  localStorage.setItem("workHistory", JSON.stringify(history));
+  renderHistory();
+}
+
+// 履歴表示
+function renderHistory(){
+  const history = JSON.parse(localStorage.getItem("workHistory") || "[]");
+  document.getElementById("history").innerHTML =
+    history.map(h => `<div>${h}</div>`).join("");
+}
+
+renderHistory();
+</script>
+
+</body>
+</html>
