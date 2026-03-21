@@ -8,65 +8,67 @@
 body{
   font-family:sans-serif;
   background:#f0f0f0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
+  margin:0;
 }
 
+/* 画面いっぱいに */
 .card{
-  background:#fff;
+  width:100%;
+  min-height:100vh;
+  box-sizing:border-box;
   padding:20px;
-  border-radius:12px;
-  width:320px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  border-radius:0;
 }
 
+/* タイトル大きく */
 h2{
   text-align:center;
+  font-size:22px;
 }
 
-label{
-  display:block;
-  margin-top:10px;
-}
-
+/* 入力見やすく */
 input{
   width:100%;
-  padding:6px;
-  font-size:16px;
+  padding:12px;
+  font-size:18px;
+  margin-top:5px;
+  box-sizing:border-box;
 }
 
+/* ボタンでかく */
 button{
   width:100%;
-  margin-top:8px;
-  padding:10px;
-  font-size:14px;
+  margin-top:10px;
+  padding:14px;
+  font-size:18px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   background:#4CAF50;
   color:white;
 }
 
+/* サブボタン */
 .small-btn{
-  margin-top:5px;
   background:#777;
 }
 
+/* 結果でかく */
 .result{
-  margin-top:15px;
-  font-size:18px;
+  margin-top:20px;
+  font-size:22px;
   font-weight:bold;
   text-align:center;
 }
 
+/* 履歴も見やすく */
 .history{
-  margin-top:10px;
-  font-size:12px;
-  max-height:120px;
+  margin-top:15px;
+  font-size:14px;
+  max-height:150px;
   overflow:auto;
   background:#fafafa;
-  padding:5px;
+  padding:10px;
+  border-radius:8px;
 }
 </style>
 </head>
