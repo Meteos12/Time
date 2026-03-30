@@ -9,7 +9,7 @@
 body{font-family:sans-serif;margin:0;background:#eef1f5;color:#111}
 @media (prefers-color-scheme: dark){
  body{background:#121212;color:#eee}
- .worker,.total,.history{background:#1e1e1e;color:#eee}
+ .worker,.total,.history{background:#3a3a3a;color:#eee}
  input{background:#2a2a2a;color:#eee;border:1px solid #444}
 }
 
@@ -141,7 +141,7 @@ function attachSwipe(i){
  });
  el.addEventListener('touchend',e=>{
   let endX=e.changedTouches[0].clientX;
-  if(endX-startX>80){
+  if(endX-startX>200){
    removeWorker(i);
   }
  });
