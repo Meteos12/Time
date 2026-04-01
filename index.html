@@ -5,15 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>サクッと計測くん</title>
 
+<!-- アイコン設定 -->
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json">
+
 <style>
 body{font-family:sans-serif;margin:0;background:#eef1f5;color:#111}
 @media (prefers-color-scheme: dark){
  body{background:#121212;color:#eee}
- .worker,.total,.history{background:#3a3a3a;color:#ccc}
+ .worker,.total,.history{background:#1e1e1e;color:#eee}
  input{background:#2a2a2a;color:#eee;border:1px solid #444}
+ .result{color:#fff}
 }
 
 .card{width:100%;min-height:100vh;padding:15px;box-sizing:border-box}
+
 h2{text-align:center;margin-bottom:10px}
 
 .worker{
@@ -24,7 +33,6 @@ h2{text-align:center;margin-bottom:10px}
  box-shadow:0 6px 16px rgba(0,0,0,0.08);
  position:relative;
  animation:fadeIn 0.25s ease;
- transition:transform 0.2s;
 }
 
 @keyframes fadeIn{
@@ -89,7 +97,11 @@ input{flex:1;padding:12px;font-size:16px;border-radius:8px;border:1px solid #ddd
 
 <body>
 <div class="card">
-<h2>作業時間ツール　サクッと計測くん</h2>
+
+<h2>
+<img src="logo.png" style="height:40px;vertical-align:middle;">
+サクッと計測くん
+</h2>
 
 <div id="workers"></div>
 <button onclick="addWorker()">＋ 作業者を追加</button>
@@ -141,7 +153,7 @@ function attachSwipe(i){
  });
  el.addEventListener('touchend',e=>{
   let endX=e.changedTouches[0].clientX;
-  if(endX-startX>200){
+  if(endX-startX>80){
    removeWorker(i);
   }
  });
@@ -239,7 +251,6 @@ function saveHistory(name,s,e,b,d,c){
  const perHour = (c>0&&d>0)?Math.round(c/(d/60)):"-";
  const perItem = (c>0&&d>0)?formatItem((d*60)/c):"-";
 
- // ゴミ削除（同条件で出来高0の直前履歴を削除）
  if(c>0 && h.length>0){
   const prev=h[0];
   if(prev.s===s && prev.e===e && prev.b===b && prev.c===0){
