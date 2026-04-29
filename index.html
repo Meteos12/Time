@@ -180,7 +180,7 @@ function attachSwipe(i){
  el.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;});
  el.addEventListener('touchend',e=>{
   let endX=e.changedTouches[0].clientX;
-  if(endX-startX>80){removeWorker(i);} // 右スワイプ
+  if(endX-startX>800){removeWorker(i);} // 右スワイプ
  });
 }
 
