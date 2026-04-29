@@ -59,8 +59,8 @@ h2{text-align:center;margin-bottom:10px}
 .label{width:110px;font-size:13px;color:#666}
 input{flex:1;padding:12px;font-size:16px;border-radius:8px;border:1px solid #ddd}
 
-.time-btn{margin-left:5px;padding:10px;font-size:12px;background:#888}
-.copy-btn{margin-left:5px;padding:10px;font-size:12px;background:#4caf50;color:#fff}
+.time-btn{margin-left:5px;padding:12px;font-size:14px;border-radius:10px;background:#888}
+.copy-btn{margin-left:5px;padding:12px;font-size:14px;border-radius:10px;background:#4caf50;color:#fff}
 
 .result{margin-top:10px;font-size:20px;font-weight:bold}
 
@@ -120,18 +120,30 @@ function addWorker(data=null){
  
  <div class="row"><div class="label">作業者</div><input id="name${i}"></div>
  
- <div class="row">
- <div class="label">開始</div>
- <input type="time" id="start${i}">
- <button class="time-btn" onclick="setNow('start${i}')">今</button>
- <button class="copy-btn" onclick="copyPrevTime(${i})">上の人の時間をコピー</button>
- </div>
+<div class="row">
+  <div class="label">開始</div>
+
+  <div class="input-line">
+    <input type="time" id="start${i}">
+  </div>
+
+  <div class="action-line">
+    <button class="time-btn" onclick="setNow('start${i}')">今</button>
+    <button class="copy-btn" onclick="copyPrevTime(${i})">上の人の時間をコピー</button>
+  </div>
+</div>
  
  <div class="row">
- <div class="label">終了</div>
- <input type="time" id="end${i}">
- <button class="time-btn" onclick="setNow('end${i}')">今</button>
- </div>
+  <div class="label">終了</div>
+
+  <div class="input-line">
+    <input type="time" id="end${i}">
+  </div>
+
+  <div class="action-line">
+    <button class="time-btn" onclick="setNow('end${i}')">今</button>
+  </div>
+</div>
  
  <div class="row"><div class="label">休憩</div><input type="number" id="break${i}"></div>
  <div class="row"><div class="label">出来高</div><input type="number" id="count${i}"></div>
