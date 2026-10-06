@@ -1,334 +1,787 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f9d68">
+<meta name="description" content="作業時間・出来高をサクッと計算できる現場向けタイムツール">
 <title>サクッと計測くん</title>
 
-<!-- アイコン設定 -->
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
-
-<!-- PWA manifest -->
 <link rel="manifest" href="manifest.json">
 
 <style>
-body{font-family:sans-serif;margin:0;background:#eef1f5;color:#111}
-@media (prefers-color-scheme: dark){
- body{background:#121212;color:#eee}
- .worker,.total,.history{background:#1e1e1e;color:#eee}
- input{background:#2a2a2a;color:#eee;border:1px solid #444}
- .result{color:#fff}
+:root{
+  color-scheme:light;
+  --bg:#f4f6f8;
+  --surface:#fff;
+  --surface-2:#f8fafb;
+  --text:#172019;
+  --muted:#6d786f;
+  --line:#e3e9e5;
+  --primary:#1f9d68;
+  --primary-strong:#168255;
+  --primary-soft:#e7f6ef;
+  --danger:#d94b4b;
+  --danger-soft:#fff0f0;
+  --shadow:0 8px 24px rgba(23,32,25,.07);
+  --radius:18px;
 }
 
-.card{width:100%;min-height:100vh;padding:15px;box-sizing:border-box}
-
-h2{text-align:center;margin-bottom:10px}
-
-.worker{
- background:#fff;
- margin-top:12px;
- padding:14px;
- border-radius:16px;
- box-shadow:0 6px 16px rgba(0,0,0,0.08);
- position:relative;
- animation:fadeIn 0.25s ease;
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
 }
-
-@keyframes fadeIn{
- from{opacity:0;transform:translateY(10px)}
- to{opacity:1;transform:translateY(0)}
+button,input{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{
+  outline:3px solid rgba(31,157,104,.25);
+  outline-offset:2px;
 }
-@keyframes fadeOut{
- to{opacity:0;transform:translateX(100px)}
-}
-
-.delete-btn{
- position:absolute;
- top:10px;
- right:10px;
- background:#e53935;
- color:#fff;
- border:none;
- border-radius:50%;
- width:36px;
- height:36px;
- font-size:18px;
-}
-
-.row{
-  display:flex;
-  flex-direction:column;
-  margin-top:10px;
-}
-
-.input-line{
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
-
-.input-line input{
-  flex:1;
-}
-
-.time-btn{
-  width:60px;
-  height:48px;
-  border-radius:10px;
-  font-size:14px;
-}
-
-.copy-btn{
-  margin-top:6px;
+input{
   width:100%;
-  padding:12px;
+  min-height:50px;
+  padding:0 14px;
+  border:1px solid var(--line);
   border-radius:12px;
-  font-size:14px;
-  background:#4caf50;
-  color:#fff;
-  font-weight:bold;
+  background:var(--surface);
+  color:var(--text);
+  font-size:17px;
+  transition:border-color .16s,box-shadow .16s;
 }
-.result{margin-top:10px;font-size:20px;font-weight:bold}
+input::placeholder{color:#a1aaa4}
+input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(31,157,104,.1)}
+input[type="number"]{font-variant-numeric:tabular-nums}
+input[type="time"]{font-variant-numeric:tabular-nums}
 
-.total{
- margin-top:15px;
- padding:16px;
- border-radius:16px;
- font-weight:bold;
- font-size:20px;
- box-shadow:0 4px 12px rgba(0,0,0,0.08);
+.app{width:min(920px,100%);margin:0 auto;padding:16px 16px 100px}
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  margin:-16px -16px 16px;
+  padding:12px 16px;
+  background:rgba(244,246,248,.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(227,233,229,.75);
 }
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:920px;margin:auto}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{width:38px;height:38px;object-fit:contain;border-radius:10px}
+.brand-copy{min-width:0}
+.brand-title{margin:0;font-size:17px;line-height:1.15;font-weight:800;letter-spacing:.01em}
+.brand-sub{margin:3px 0 0;color:var(--muted);font-size:12px}
+.clock{
+  text-align:right;
+  flex:0 0 auto;
+  font-variant-numeric:tabular-nums;
+}
+.clock-time{font-size:15px;font-weight:800}
+.clock-date{font-size:11px;color:var(--muted)}
+
+.hero{
+  padding:20px;
+  border-radius:24px;
+  background:linear-gradient(135deg,#ffffff 0%,#f1fbf6 100%);
+  box-shadow:var(--shadow);
+  border:1px solid rgba(31,157,104,.09);
+  margin-bottom:14px;
+}
+.hero-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.eyebrow{font-size:12px;font-weight:800;color:var(--primary-strong);letter-spacing:.04em}
+.hero h1{font-size:clamp(25px,5vw,34px);line-height:1.15;margin:4px 0 8px;letter-spacing:-.03em}
+.hero p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+.quick-add{
+  flex:0 0 auto;
+  min-height:50px;
+  padding:0 16px;
+  border:0;
+  border-radius:14px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:800;
+  box-shadow:0 7px 18px rgba(31,157,104,.22);
+  white-space:nowrap;
+}
+.quick-add:active{transform:translateY(1px);background:var(--primary-strong)}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:14px;
+}
+.stat{
+  padding:15px 16px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 5px 16px rgba(23,32,25,.045);
+}
+.stat-label{color:var(--muted);font-size:11px;font-weight:700}
+.stat-value{margin-top:5px;font-size:21px;font-weight:850;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat-value small{font-size:12px;color:var(--muted);font-weight:700}
+
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin:18px 2px 9px;
+}
+.section-title{margin:0;font-size:16px;font-weight:850}
+.section-meta{font-size:12px;color:var(--muted)}
+
+.worker-list{display:grid;gap:12px}
+.worker{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:16px;
+  animation:cardIn .22s ease;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.worker.removing{animation:cardOut .18s ease forwards}
+@keyframes cardOut{to{opacity:0;transform:translateX(22px);height:0;margin:0;padding-top:0;padding-bottom:0;border:0}}
+
+.worker-head{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.worker-number{
+  width:30px;height:30px;border-radius:50%;
+  display:grid;place-items:center;
+  background:var(--primary-soft);color:var(--primary-strong);
+  font-size:13px;font-weight:900;flex:0 0 auto;
+}
+.worker-name{flex:1;min-width:0}
+.worker-name input{font-weight:800}
+.icon-btn{
+  width:42px;height:42px;display:grid;place-items:center;
+  border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-2);color:var(--muted);
+  flex:0 0 auto;font-size:18px;
+}
+.icon-btn:hover{background:#f0f3f1}
+.icon-btn.danger{color:var(--danger)}
+.icon-btn.danger:hover{background:var(--danger-soft);border-color:#f2cccc}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.field label{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;margin:0 0 6px;
+  font-size:12px;font-weight:800;color:var(--muted);
+}
+.now-btn{
+  border:0;background:transparent;color:var(--primary-strong);
+  padding:0;font-size:12px;font-weight:850;
+}
+.now-btn:hover{text-decoration:underline}
+.input-row{display:flex;gap:7px}
+.input-row input{min-width:0}
+.mini-now{
+  flex:0 0 48px;min-height:50px;
+  border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-2);color:var(--text);
+  font-size:13px;font-weight:850;
+}
+.mini-now:active{transform:scale(.98)}
+
+.copy-row{margin-top:10px}
+.copy-btn{
+  width:100%;min-height:44px;
+  border:1px dashed #b7cfc3;border-radius:12px;
+  background:var(--primary-soft);color:var(--primary-strong);
+  font-size:13px;font-weight:850;
+}
+.copy-btn:disabled{opacity:.45;cursor:not-allowed}
+.optional-grid{margin-top:10px}
+
+.result{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:12px;margin-top:12px;padding:13px 14px;
+  border-radius:14px;background:var(--surface-2);border:1px solid var(--line);
+}
+.result-main{min-width:0}
+.result-time{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.result-eff{margin-top:3px;color:var(--muted);font-size:12px;font-weight:700}
+.result-badge{
+  padding:6px 9px;border-radius:999px;background:var(--primary-soft);
+  color:var(--primary-strong);font-size:11px;font-weight:850;white-space:nowrap
+}
+.result.empty .result-time{font-size:15px;color:#99a29c}
+.result.empty .result-badge{display:none}
+
+.hint{
+  margin:8px 2px 0;color:var(--muted);font-size:11px;line-height:1.6;
+}
+.swipe-note{text-align:center;margin:10px 0 0;font-size:11px;color:#97a09a}
+
+.bottom-add{
+  width:100%;min-height:52px;margin-top:12px;
+  border:1px solid #b7cfc3;border-radius:15px;
+  background:var(--surface);color:var(--primary-strong);font-weight:850;
+}
+.bottom-add:hover{background:var(--primary-soft)}
 
 .history{
- margin-top:15px;
- padding:12px;
- border-radius:12px;
- font-size:14px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
 }
-
+.history-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:15px 16px;border-bottom:1px solid var(--line);
+}
+.history-head h2{font-size:16px;margin:0}
+.clear-history{
+  border:0;background:transparent;color:var(--danger);
+  font-size:12px;font-weight:800;padding:4px 0;
+}
+.history-empty{padding:20px 16px;color:var(--muted);font-size:13px;text-align:center}
+.history-list{display:grid}
 .history-item{
- padding:6px 0;
- border-bottom:1px solid #eee;
- cursor:pointer;
+  border-bottom:1px solid var(--line);
+}
+.history-item:last-child{border-bottom:0}
+.history-toggle{
+  width:100%;display:grid;grid-template-columns:1fr auto;gap:10px;
+  border:0;background:none;text-align:left;padding:13px 16px;
+  color:var(--text);
+}
+.history-title{font-size:13px;font-weight:800}
+.history-sub{margin-top:3px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.history-time{font-size:14px;font-weight:900;white-space:nowrap;font-variant-numeric:tabular-nums}
+.history-detail{
+  padding:0 16px 13px;color:var(--muted);font-size:12px;
+  line-height:1.7;display:none;
+}
+.history-item.open .history-detail{display:block}
+
+.footer{
+  margin-top:15px;text-align:center;color:#929b95;font-size:11px;line-height:1.7
 }
 
-.detail{
- font-size:13px;
- color:#888;
- margin-top:4px;
- animation:fadeIn 0.2s ease;
+@media (max-width:650px){
+  .app{padding:10px 10px 90px}
+  .topbar{margin:-10px -10px 12px;padding:10px}
+  .hero{padding:17px;border-radius:20px}
+  .hero-row{align-items:flex-start;flex-direction:column}
+  .quick-add{width:100%}
+  .summary{gap:7px}
+  .stat{padding:12px 10px}
+  .stat-value{font-size:18px}
+  .grid{grid-template-columns:1fr}
+  .worker{padding:14px}
+}
+@media (max-width:390px){
+  .summary{grid-template-columns:1fr}
+  .stat{display:flex;align-items:center;justify-content:space-between}
+  .stat-value{margin-top:0}
+}
+
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#111512;--surface:#181d1a;--surface-2:#1d2420;
+    --text:#edf2ee;--muted:#a6b0a9;--line:#2e3731;
+    --primary:#49c58d;--primary-strong:#6fe0ad;
+    --primary-soft:#173328;--danger:#ff7474;--danger-soft:#3a2020;
+    --shadow:0 9px 24px rgba(0,0,0,.24)
+  }
+  .topbar{background:rgba(17,21,18,.9);border-bottom-color:rgba(46,55,49,.8)}
+  .hero{background:linear-gradient(135deg,#191f1b,#14271f)}
+  input{background:#171c19}
+  .mini-now,.icon-btn{background:#1b221e}
+  .quick-add{color:#0e1913}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition:none!important}
 }
 </style>
 </head>
 
 <body>
-<div class="card">
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img src="logo.png" alt="">
+        <div class="brand-copy">
+          <p class="brand-title">サクッと計測くん</p>
+          <p class="brand-sub">作業時間・出来高をかんたん計算</p>
+        </div>
+      </div>
+      <div class="clock" aria-live="polite">
+        <div id="clockTime" class="clock-time">--:--</div>
+        <div id="clockDate" class="clock-date">----</div>
+      </div>
+    </div>
+  </header>
 
-<h2>
-作業時間ツール
-<img src="logo.png" style="height:40px;vertical-align:middle;">
-</h2>
+  <section class="hero">
+    <div class="hero-row">
+      <div>
+        <div class="eyebrow">QUICK TIME TRACKER</div>
+        <h1>今日の作業を、サクッと。</h1>
+        <p>開始・終了・休憩・出来高を入れるだけ。<br>「今」を押すだけでも計算できます。</p>
+      </div>
+      <button class="quick-add" id="heroAdd" type="button">＋ 作業者を追加</button>
+    </div>
+  </section>
 
-<div id="workers"></div>
-<button onclick="addWorker()">＋ 作業者を追加</button>
+  <section class="summary" aria-label="全体集計">
+    <div class="stat">
+      <div class="stat-label">合計時間</div>
+      <div id="totalTime" class="stat-value">0時間00分</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">合計出来高</div>
+      <div id="totalCount" class="stat-value">0 <small>個</small></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">全体ペース</div>
+      <div id="totalRate" class="stat-value">— <small>個/時</small></div>
+    </div>
+  </section>
 
-<div id="total" class="total"></div>
-<div id="history" class="history"></div>
+  <div class="section-head">
+    <h2 class="section-title">作業者</h2>
+    <span id="workerCount" class="section-meta">0人</span>
+  </div>
 
+  <main id="workers" class="worker-list" aria-live="polite"></main>
+  <button class="bottom-add" id="bottomAdd" type="button">＋ 作業者を追加</button>
+  <p class="swipe-note">スマホではカードを右へスワイプして削除できます</p>
+
+  <section class="history" aria-label="計測履歴">
+    <div class="history-head">
+      <h2>最近の計測</h2>
+      <button id="clearHistory" class="clear-history" type="button">履歴を消去</button>
+    </div>
+    <div id="historyList"></div>
+  </section>
+
+  <p class="footer">入力内容はこの端末のブラウザに保存されます。インターネット接続は不要です。</p>
 </div>
 
 <script>
-let id=0;
-let lastData={};
+const STORAGE_WORKERS = "sakutto-workers-v2";
+const STORAGE_HISTORY = "sakutto-history-v2";
 
-function addWorker(){
- const i=id++;
- const html=`
- <div class="worker" id="w${i}">
- <button class="delete-btn" onclick="removeWorker(${i})">×</button>
- 
- <div class="row"><div class="label">作業者</div><input id="name${i}"></div>
- 
- <div class="row">
-  <div class="label">開始</div>
+let nextId = 1;
+let workers = [];
+let history = [];
+let lastSavedSignature = new Map();
 
-  <div class="input-line">
-    <input type="time" id="start${i}">
-    <button class="time-btn" onclick="setNow('start${i}')">今</button>
-  </div>
+const $ = (id) => document.getElementById(id);
 
-  <button class="copy-btn" onclick="copyPrevTime(${i})">
-    上の人の時間をコピー
-  </button>
-</div>
- 
-<div class="row">
-  <div class="label">終了</div>
-
-  <div class="input-line">
-    <input type="time" id="end${i}">
-    <button class="time-btn" onclick="setNow('end${i}')">今</button>
-  </div>
-</div>
- 
- <div class="row"><div class="label">休憩</div><input type="number" id="break${i}"></div>
- <div class="row"><div class="label">出来高</div><input type="number" id="count${i}"></div>
- 
- <div class="result" id="res${i}"></div>
- </div>`;
- document.getElementById("workers").insertAdjacentHTML("beforeend",html);
- attachAutoCalc();
- attachSwipe(i);
+function uid(){
+  return nextId++;
 }
 
-function attachSwipe(i){
- const el=document.getElementById(`w${i}`);
- let startX=0;
- el.addEventListener('touchstart',e=>{
-  startX=e.touches[0].clientX;
- });
- el.addEventListener('touchend',e=>{
-  let endX=e.changedTouches[0].clientX;
-  if(endX-startX>80){
-   removeWorker(i);
+function escapeHtml(value){
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[ch]));
+}
+
+function formatDuration(minutes){
+  const m = Math.max(0, Math.round(minutes));
+  const h = Math.floor(m / 60);
+  const min = m % 60;
+  return h > 0 ? h + "時間" + String(min).padStart(2,"0") + "分" : min + "分";
+}
+
+function formatPerItem(seconds){
+  if (!Number.isFinite(seconds)) return "—";
+  if (seconds < 60) return Math.round(seconds) + "秒/個";
+  const min = Math.floor(seconds / 60);
+  const sec = Math.round(seconds % 60);
+  return sec ? min + "分" + sec + "秒/個" : min + "分/個";
+}
+
+function toMinutes(time){
+  if(!time || !time.includes(":")) return null;
+  const [h,m] = time.split(":").map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+}
+
+function calcMinutes(start,end,breakMin){
+  const s = toMinutes(start), e = toMinutes(end);
+  if(s === null || e === null) return null;
+  let diff = e - s;
+  if(diff < 0) diff += 24 * 60;
+  return Math.max(0, diff - Math.max(0, Number(breakMin) || 0));
+}
+
+function nowTime(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+}
+
+function renderClock(){
+  const d = new Date();
+  $("clockTime").textContent = nowTime();
+  $("clockDate").textContent =
+    d.getFullYear() + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" +
+    String(d.getDate()).padStart(2,"0") + "（" +
+    ["日","月","火","水","木","金","土"][d.getDay()] + "）";
+}
+
+function saveWorkers(){
+  localStorage.setItem(STORAGE_WORKERS, JSON.stringify(workers));
+}
+
+function saveHistory(){
+  localStorage.setItem(STORAGE_HISTORY, JSON.stringify(history.slice(0,30)));
+}
+
+function loadState(){
+  try{
+    const savedWorkers = JSON.parse(localStorage.getItem(STORAGE_WORKERS) || "[]");
+    const savedHistory = JSON.parse(localStorage.getItem(STORAGE_HISTORY) || "[]");
+    workers = Array.isArray(savedWorkers) ? savedWorkers : [];
+    history = Array.isArray(savedHistory) ? savedHistory : [];
+  }catch{
+    workers = [];
+    history = [];
   }
- });
+
+  const maxId = workers.reduce((max,w) => Math.max(max, Number(w.id)||0), 0);
+  nextId = maxId + 1;
+
+  if(workers.length === 0){
+    addWorker(false);
+  }else{
+    renderWorkers();
+    calcAll();
+  }
+  renderHistory();
 }
 
-function removeWorker(i){
- const el=document.getElementById(`w${i}`);
- el.style.animation="fadeOut 0.2s ease";
- setTimeout(()=>el.remove(),200);
+function addWorker(shouldSave=true){
+  const id = uid();
+  workers.push({
+    id,
+    name:"",
+    start:"",
+    end:"",
+    breakMin:"",
+    count:""
+  });
+  renderWorkers();
+  calcAll();
+  if(shouldSave) saveWorkers();
+
+  requestAnimationFrame(() => {
+    const input = document.querySelector("#worker-" + id + " .name-input");
+    if(input) input.focus();
+  });
 }
 
-function setNow(id){
- const now=new Date();
- const h=String(now.getHours()).padStart(2,'0');
- const m=String(now.getMinutes()).padStart(2,'0');
- document.getElementById(id).value=`${h}:${m}`;
- autoCalc();
+function removeWorker(id){
+  if(workers.length <= 1){
+    const w = workers[0];
+    w.name = ""; w.start = ""; w.end = ""; w.breakMin = ""; w.count = "";
+    lastSavedSignature.delete(String(id));
+    renderWorkers(); calcAll(); saveWorkers();
+    return;
+  }
+  const el = $("worker-" + id);
+  if(el){
+    el.classList.add("removing");
+    setTimeout(() => {
+      workers = workers.filter(w => w.id !== id);
+      lastSavedSignature.delete(String(id));
+      renderWorkers();
+      calcAll();
+      saveWorkers();
+    }, 170);
+  }else{
+    workers = workers.filter(w => w.id !== id);
+    renderWorkers(); calcAll(); saveWorkers();
+  }
 }
 
-function toMin(t){const [h,m]=t.split(":").map(Number);return h*60+m}
-
-function formatTime(min){return `${Math.floor(min/60)}時間${min%60}分`}
-
-function formatItem(sec){
- if(sec<60)return `${Math.round(sec)}秒`;
- return `${Math.floor(sec/60)}分${Math.round(sec%60)}秒`;
+function updateWorker(id,key,value){
+  const w = workers.find(item => item.id === id);
+  if(!w) return;
+  w[key] = value;
+  saveWorkers();
+  calcAll();
 }
 
-function calc(i){
- const name=document.getElementById(`name${i}`).value||"名無し";
- const s=document.getElementById(`start${i}`).value;
- const e=document.getElementById(`end${i}`).value;
- const b=Number(document.getElementById(`break${i}`).value)||0;
- const c=Number(document.getElementById(`count${i}`).value)||0;
-
- if(!s||!e)return null;
-
- let d=toMin(e)-toMin(s);
- if(d<0)d+=1440;
- d-=b;
- if(d<0)d=0;
-
- let txt=`${formatTime(d)}`;
- if(c>0&&d>0){
-  txt+=`<br>${Math.round(c/(d/60))}個/時`;
-  txt+=`<br>${formatItem((d*60)/c)}/個`;
- }
-
- document.getElementById(`res${i}`).innerHTML=txt;
-
- const key=`${name}-${s}-${e}-${b}-${c}`;
- const complete = s && e && document.getElementById(`break${i}`).value !== "";
-
- if(complete && lastData[i]!==key){
-  lastData[i]=key;
-  saveHistory(name,s,e,b,d,c);
- }
-
- return {time:d,count:c};
+function setNowFor(id,key){
+  updateWorker(id,key,nowTime());
+  const input = document.querySelector("#worker-" + id + " ." + (key === "start" ? "start-input" : "end-input"));
+  if(input){
+    input.value = workers.find(w => w.id === id)?.[key] || "";
+  }
 }
 
-function autoCalc(){
- let totalMin=0,totalCount=0;
- for(let i=0;i<id;i++){
-  const el=document.getElementById(`w${i}`);
-  if(!el)continue;
-  const r=calc(i);
-  if(r){totalMin+=r.time;totalCount+=r.count}
- }
-
- let txt=`合計 ${formatTime(totalMin)}`;
- txt+=`<br>出来高 ${totalCount}個`;
-
- if(totalCount>0&&totalMin>0){
-  txt+=`<br>${Math.round(totalCount/(totalMin/60))}個/時`;
-  txt+=`<br>${formatItem((totalMin*60)/totalCount)}/個`;
- }
-
- document.getElementById("total").innerHTML=txt;
+function copyPrevious(id){
+  const index = workers.findIndex(w => w.id === id);
+  if(index <= 0) return;
+  const prev = workers[index - 1];
+  const current = workers[index];
+  current.start = prev.start;
+  current.end = prev.end;
+  current.breakMin = prev.breakMin;
+  const card = $("worker-" + id);
+  card.querySelector(".start-input").value = current.start;
+  card.querySelector(".end-input").value = current.end;
+  card.querySelector(".break-input").value = current.breakMin;
+  saveWorkers();
+  calcAll();
 }
 
-function attachAutoCalc(){
- document.querySelectorAll("input").forEach(el=>{
-  el.oninput=()=>{
-   clearTimeout(el._t);
-   el._t=setTimeout(autoCalc,500);
+function renderWorkers(){
+  $("workers").innerHTML = workers.map((w,index) => {
+    const previousExists = index > 0;
+    return `
+      <article class="worker" id="worker-${w.id}" data-id="${w.id}">
+        <div class="worker-head">
+          <div class="worker-number" aria-hidden="true">${index + 1}</div>
+          <div class="worker-name">
+            <input
+              class="name-input"
+              type="text"
+              inputmode="text"
+              autocomplete="off"
+              placeholder="作業者名（任意）"
+              value="${escapeHtml(w.name)}"
+              aria-label="作業者名"
+            >
+          </div>
+          <button class="icon-btn danger delete-worker" type="button" aria-label="${index+1}人目を削除">×</button>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label>開始 <button class="now-btn start-now" type="button">今</button></label>
+            <div class="input-row">
+              <input class="start-input" type="time" value="${escapeHtml(w.start)}" aria-label="開始時刻">
+              <button class="mini-now start-mini" type="button">今</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>終了 <button class="now-btn end-now" type="button">今</button></label>
+            <div class="input-row">
+              <input class="end-input" type="time" value="${escapeHtml(w.end)}" aria-label="終了時刻">
+              <button class="mini-now end-mini" type="button">今</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="copy-row">
+          <button class="copy-btn" type="button" ${previousExists ? "" : "disabled"}>${previousExists ? "↳ 前の人と同じ時間をコピー" : "1人目はコピーできません"}</button>
+        </div>
+
+        <div class="grid optional-grid">
+          <div class="field">
+            <label>休憩 <span>分</span></label>
+            <input class="break-input" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="${escapeHtml(w.breakMin)}" aria-label="休憩時間（分）">
+          </div>
+          <div class="field">
+            <label>出来高 <span>個</span></label>
+            <input class="count-input" type="number" min="0" step="1" inputmode="numeric" placeholder="任意" value="${escapeHtml(w.count)}" aria-label="出来高（個）">
+          </div>
+        </div>
+
+        <div class="result empty">
+          <div class="result-main">
+            <div class="result-time">開始・終了を入力</div>
+            <div class="result-eff">休憩を引いた正味作業時間を計算します</div>
+          </div>
+          <div class="result-badge"></div>
+        </div>
+      </article>`;
+  }).join("");
+
+  $("workerCount").textContent = workers.length + "人";
+
+  workers.forEach((w) => {
+    const card = $("worker-" + w.id);
+    const name = card.querySelector(".name-input");
+    const start = card.querySelector(".start-input");
+    const end = card.querySelector(".end-input");
+    const breakInput = card.querySelector(".break-input");
+    const count = card.querySelector(".count-input");
+
+    name.addEventListener("input", e => updateWorker(w.id,"name",e.target.value));
+    start.addEventListener("input", e => updateWorker(w.id,"start",e.target.value));
+    end.addEventListener("input", e => updateWorker(w.id,"end",e.target.value));
+    breakInput.addEventListener("input", e => updateWorker(w.id,"breakMin",e.target.value));
+    count.addEventListener("input", e => updateWorker(w.id,"count",e.target.value));
+
+    card.querySelector(".delete-worker").addEventListener("click", () => removeWorker(w.id));
+    card.querySelector(".copy-btn").addEventListener("click", () => copyPrevious(w.id));
+    card.querySelector(".start-now").addEventListener("click", () => setNowFor(w.id,"start"));
+    card.querySelector(".start-mini").addEventListener("click", () => setNowFor(w.id,"start"));
+    card.querySelector(".end-now").addEventListener("click", () => setNowFor(w.id,"end"));
+    card.querySelector(".end-mini").addEventListener("click", () => setNowFor(w.id,"end"));
+
+    attachSwipe(card,w.id);
+  });
+}
+
+function renderResult(w,minutes){
+  const card = $("worker-" + w.id);
+  if(!card) return;
+  const result = card.querySelector(".result");
+
+  if(minutes === null){
+    result.classList.add("empty");
+    result.querySelector(".result-time").textContent = "開始・終了を入力";
+    result.querySelector(".result-eff").textContent = "休憩を引いた正味作業時間を計算します";
+    result.querySelector(".result-badge").textContent = "";
+    return;
+  }
+
+  result.classList.remove("empty");
+  result.querySelector(".result-time").textContent = formatDuration(minutes);
+
+  const count = Math.max(0, Number(w.count) || 0);
+  if(count > 0 && minutes > 0){
+    const rate = Math.round(count / (minutes / 60));
+    result.querySelector(".result-eff").textContent = rate + "個/時 ・ " + formatPerItem((minutes * 60) / count);
+    result.querySelector(".result-badge").textContent = count.toLocaleString() + "個";
+  }else{
+    result.querySelector(".result-eff").textContent = "出来高を入れるとペースも表示";
+    result.querySelector(".result-badge").textContent = "";
+  }
+}
+
+function calcAll(){
+  let totalMin = 0;
+  let totalCount = 0;
+
+  workers.forEach(w => {
+    const minutes = calcMinutes(w.start,w.end,w.breakMin);
+    renderResult(w,minutes);
+    if(minutes !== null){
+      totalMin += minutes;
+      totalCount += Math.max(0,Number(w.count)||0);
+      saveCompletedHistory(w,minutes);
+    }
+  });
+
+  $("totalTime").textContent = formatDuration(totalMin);
+  $("totalCount").innerHTML = totalCount.toLocaleString() + " <small>個</small>";
+  $("totalRate").innerHTML =
+    totalCount > 0 && totalMin > 0
+      ? Math.round(totalCount / (totalMin / 60)).toLocaleString() + " <small>個/時</small>"
+      : "— <small>個/時</small>";
+  $("workerCount").textContent = workers.length + "人";
+}
+
+function saveCompletedHistory(w,minutes){
+  const count = Math.max(0,Number(w.count)||0);
+  const breakMin = Math.max(0,Number(w.breakMin)||0);
+  const signature = [w.name,w.start,w.end,breakMin,count,minutes].join("|");
+  const key = String(w.id);
+
+  if(lastSavedSignature.get(key) === signature) return;
+  lastSavedSignature.set(key,signature);
+
+  const entry = {
+    name: w.name || "名無し",
+    start:w.start,
+    end:w.end,
+    breakMin,
+    minutes,
+    count,
+    createdAt:Date.now()
   };
- });
+
+  history.unshift(entry);
+  history = history.slice(0,30);
+  saveHistory();
+  renderHistory();
 }
 
-function saveHistory(name,s,e,b,d,c){
- let h=JSON.parse(localStorage.getItem("history")||"[]");
- const now=Date.now();
-
- const perHour = (c>0&&d>0)?Math.round(c/(d/60)):"-";
- const perItem = (c>0&&d>0)?formatItem((d*60)/c):"-";
-
- if(c>0 && h.length>0){
-  const prev=h[0];
-  if(prev.s===s && prev.e===e && prev.b===b && prev.c===0){
-    h.shift();
-  }
- }
-
- h.unshift({name,s,e,b,d,c,time:now,perHour,perItem,open:false});
- h=h.slice(0,20);
- localStorage.setItem("history",JSON.stringify(h));
- renderHistory();
-}
-
-function formatAgo(t){
- const d=(Date.now()-t)/1000;
- if(d<60)return Math.floor(d)+"秒前";
- if(d<3600)return Math.floor(d/60)+"分前";
- if(d<86400)return Math.floor(d/3600)+"時間前";
- return Math.floor(d/86400)+"日前";
-}
-
-function toggleDetail(index){
- let h=JSON.parse(localStorage.getItem("history")||"[]");
- h[index].open=!h[index].open;
- localStorage.setItem("history",JSON.stringify(h));
- renderHistory();
+function formatDateTime(t){
+  const d = new Date(t);
+  return String(d.getMonth()+1).padStart(2,"0") + "/" +
+         String(d.getDate()).padStart(2,"0") + " " +
+         String(d.getHours()).padStart(2,"0") + ":" +
+         String(d.getMinutes()).padStart(2,"0");
 }
 
 function renderHistory(){
- const h=JSON.parse(localStorage.getItem("history")||"[]");
- document.getElementById("history").innerHTML=
-  h.map((x,i)=>`
-   <div class="history-item" onclick="toggleDetail(${i})">
-    [${x.name}] ${x.s}〜${x.e}-${x.b}分 = ${formatTime(x.d)} / ${x.c}個 (${formatAgo(x.time)})
-    ${x.open?`<div class="detail">${x.perHour}個/時 / ${x.perItem}/個</div>`:""}
-   </div>
-  `).join("");
+  const root = $("historyList");
+  if(history.length === 0){
+    root.innerHTML = '<div class="history-empty">まだ計測履歴はありません</div>';
+    return;
+  }
+
+  root.innerHTML = '<div class="history-list">' + history.map((x,index) => {
+    const rate = x.count > 0 && x.minutes > 0 ? Math.round(x.count/(x.minutes/60)) : null;
+    return `
+      <div class="history-item" data-index="${index}">
+        <button class="history-toggle" type="button" aria-expanded="false">
+          <div>
+            <div class="history-title">${escapeHtml(x.name)}</div>
+            <div class="history-sub">${x.start}〜${x.end} ・ 休憩 ${x.breakMin}分 ・ ${formatDateTime(x.createdAt)}</div>
+          </div>
+          <div class="history-time">${formatDuration(x.minutes)}</div>
+        </button>
+        <div class="history-detail">
+          出来高：${x.count.toLocaleString()}個
+          ${rate ? " ／ " + rate + "個/時" : ""}
+          ${x.count > 0 && x.minutes > 0 ? " ／ " + formatPerItem((x.minutes*60)/x.count) : ""}
+        </div>
+      </div>`;
+  }).join("") + '</div>';
+
+  root.querySelectorAll(".history-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const item = btn.closest(".history-item");
+      const open = item.classList.toggle("open");
+      btn.setAttribute("aria-expanded",String(open));
+    });
+  });
 }
 
-renderHistory();
-</script>
+function attachSwipe(card,id){
+  let sx=0,sy=0;
+  card.addEventListener("touchstart",e => {
+    const t=e.changedTouches[0];
+    sx=t.clientX; sy=t.clientY;
+  },{passive:true});
 
+  card.addEventListener("touchend",e => {
+    const t=e.changedTouches[0];
+    const dx=t.clientX-sx, dy=t.clientY-sy;
+    if(dx > 90 && Math.abs(dx) > Math.abs(dy)*1.25) removeWorker(id);
+  },{passive:true});
+}
+
+$("heroAdd").addEventListener("click",() => addWorker());
+$("bottomAdd").addEventListener("click",() => addWorker());
+
+$("clearHistory").addEventListener("click",() => {
+  if(history.length === 0) return;
+  if(confirm("計測履歴をすべて消去しますか？")){
+    history = [];
+    lastSavedSignature.clear();
+    saveHistory();
+    renderHistory();
+  }
+});
+
+renderClock();
+setInterval(renderClock,1000 * 30);
+loadState();
+</script>
 </body>
 </html>
