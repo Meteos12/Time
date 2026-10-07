@@ -92,7 +92,7 @@ function render(){
  const root=document.querySelector("#routes");
  if(!a||!b){root.innerHTML='<div class="empty">FROMとTOを選んでください。</div>';return}
  if(!r.length){root.innerHTML='<div class="empty">登録されている中継ルートでは到達できません。<br>別カテゴリを経由するデータを追加できます。</div>';return}
- root.innerHTML=r.map((p,i)=>'<article class="route"><div class="route-title">ルート '+(i+1)+' ・ '+p.length-1+'段階</div><div class="steps">'+p.map((x,j)=>'<div class="step"><div class="cat">'+(j%2===0?'カテゴリ':'中継アイテム')+'</div><div class="item">'+x+'</div></div>'+ (j<p.length-1?'<span class="arrow">›</span>':'')).join("")+'</div><div class="note">特性を持たせる素材を最初の材料枠に入れ、各中継アイテムの次カテゴリへ運びます。</div></article>').join("");
+ root.innerHTML=r.map((p,i)=>'<article class="route"><div class="route-title">ルート '+(i+1)+' ・ '+(p.length-1)+'段階</div><div class="steps">'+p.map((x,j)=>'<div class="step"><div class="cat">'+(j%2===0?'カテゴリ':'中継アイテム')+'</div><div class="item">'+x+'</div></div>'+ (j<p.length-1?'<span class="arrow">›</span>':'')).join("")+'</div><div class="note">特性を持たせる素材を最初の材料枠に入れ、各中継アイテムの次カテゴリへ運びます。</div></article>').join("");
 }
 function renderMatrix(){
  const all=cats;let h='<thead><tr><th>FROM＼TO</th>'+all.map(c=>'<th>'+c+'</th>').join("")+'</tr></thead><tbody>';
